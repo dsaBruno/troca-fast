@@ -48,47 +48,53 @@ export const CreateOrderReturnIDW = async (
     },
   );
 
-  orderIDWReturn.data[0].Items.map(async (item) => {
-    const {
-      Comments,
-      IDSku,
-      IDStockKeepingUnitWarehouse,
-      IDTypeFulfillmentNonconformity,
-      NfeNItemPed,
-      PercentDiscount,
-      PriceList,
-      PriceSelling,
-      QuantityNonconformity,
-      ValueDiscount,
-    } = item;
+  await Promise.all(
+    orderIDWReturn.data[0].Items.map(async (item) => {
+      const {
+        Comments,
+        IDSku,
+        IDStockKeepingUnitWarehouse,
+        IDTypeFulfillmentNonconformity,
+        NfeNItemPed,
+        PercentDiscount,
+        PriceList,
+        PriceSelling,
+        QuantityNonconformity,
+        ValueDiscount,
+      } = item;
 
-    const product = products.find(
-      (product) => product.refId === item.IDSkuCompany,
-    );
+      const product = products.find(
+        (product) => product.refId === item.IDSkuCompany,
+      );
 
-    if (product !== undefined) {
-      await idWorksApi.put(
-        `/orders/${orderIDWReturn.data[0].IDOrder}/sku/${item.IDSkuMovement}`,
-        {
-          Comments,
-          IDSku,
-          IDStockKeepingUnitWarehouse,
-          IDTypeFulfillmentNonconformity,
-          NfeNItemPed,
-          PercentDiscount,
-          PriceList,
-          PriceSelling,
-          Quantity: product.quantity,
-          QuantityNonconformity,
-          ValueDiscount,
-        },
-      );
-    } else {
-      await idWorksApi.delete(
-        `/orders/${orderIDWReturn.data[0].IDOrder}/sku/${item.IDSkuMovement}`,
-      );
-    }
-  });
+      console.log(product);
+
+      if (product !== undefined) {
+        await idWorksApi.put(
+          `/orders/${orderIDWReturn.data[0].IDOrder}/sku/${item.IDSkuMovement}`,
+          {
+            Comments,
+            IDSku,
+            IDStockKeepingUnitWarehouse,
+            IDTypeFulfillmentNonconformity,
+            NfeNItemPed,
+            PercentDiscount,
+            PriceList,
+            PriceSelling,
+            Quantity: product.quantity,
+            QuantityNonconformity,
+            ValueDiscount,
+          },
+        );
+      } else {
+        await idWorksApi.delete(
+          `/orders/${orderIDWReturn.data[0].IDOrder}/sku/${item.IDSkuMovement}`,
+        );
+      }
+    }),
+  );
+
+  console.log('passou', orderIDWReturn.data[0].IDOrder);
 
   orderIDWReturn = await idWorksApi.post(
     `/orders/${orderIDWReturn.data[0].IDOrder}/start-handling`,

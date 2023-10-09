@@ -151,7 +151,7 @@ model ProductImage {
 
 model LogsRequest {
   id         String   @id @default(uuid())
-  user       User     @relation(fields: [user_id], references: [id])
+  user       User?    @relation(fields: [user_id], references: [id])
   user_id    String
   request    Request  @relation(fields: [request_id], references: [id])
   request_id String
@@ -165,7 +165,7 @@ model LogsRequest {
 
 model LogsProtocol {
   id          String   @id @default(uuid())
-  user        User     @relation(fields: [user_id], references: [id])
+  user        User?    @relation(fields: [user_id], references: [id])
   user_id     String
   protocol    Protocol @relation(fields: [protocol_id], references: [id])
   protocol_id String

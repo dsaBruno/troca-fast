@@ -72,12 +72,9 @@ interface ProductBody {
 
 @Injectable()
 export class RequestService {
-  async register(
-    req: RequestExpress,
-    body: CreateRequestDTO,
-    files,
-  ): Promise<Request> {
+  async register(req: any, body: CreateRequestDTO, files): Promise<Request> {
     const { idw, vtex } = await getOrderInfos(body.order_id);
+
     const statusRequest = await prisma.status.findUnique({
       where: {
         group_slug: {
@@ -186,6 +183,24 @@ export class RequestService {
       },
     });
 
+    await prisma.logsRequest.create({
+      data: {
+        request: {
+          connect: {
+            id: request.id,
+          },
+        },
+        status: {
+          connect: {
+            group_slug: {
+              slug: 'em-analise',
+              group: 'request',
+            },
+          },
+        },
+      },
+    });
+
     await Promise.all(
       actionsTypePresents.map(async (action: string) => {
         const data: Prisma.ProtocolCreateInput = {
@@ -207,6 +222,24 @@ export class RequestService {
 
         const protocol = await prisma.protocol.create({
           data,
+        });
+
+        await prisma.logsProtocol.create({
+          data: {
+            protocol: {
+              connect: {
+                id: protocol.id,
+              },
+            },
+            status: {
+              connect: {
+                group_slug: {
+                  slug: 'solicitado',
+                  group: 'protocol',
+                },
+              },
+            },
+          },
         });
 
         const proportionalAmounts = {
@@ -292,9 +325,37 @@ export class RequestService {
         id,
       },
       include: {
+        LogsRequest: {
+          include: {
+            status: {
+              select: {
+                title: true,
+              },
+            },
+            user: {
+              select: {
+                fullname: true,
+              },
+            },
+          },
+        },
         status: true,
         protocol: {
           include: {
+            logsProtocol: {
+              include: {
+                status: {
+                  select: {
+                    title: true,
+                  },
+                },
+                user: {
+                  select: {
+                    fullname: true,
+                  },
+                },
+              },
+            },
             status: true,
             product: {
               include: {
@@ -357,9 +418,12 @@ export class RequestService {
 
         await Promise.all(
           protocol.product.map(async (product) => {
-            const productApprovalInformation = body.products.find(
-              (item) => item.product_id === product.id,
-            );
+            const productApprovalInformation: {
+              product_id: string;
+              quantity: number;
+              reason_id: string | null;
+              approved: boolean;
+            } = body.products.find((item) => item.product_id === product.id);
 
             const reason_id =
               productApprovalInformation.reason_id || product.reason_id;
@@ -458,15 +522,19 @@ export class RequestService {
 
     // IDCarrier = 1864 (PAC) || 1865 (SEDEX)
 
-    // const SRO = await idWorksApi.post('/correios/reversa', {
-    //   IDCarrier: 1864,
-    //   IDOrder: orderReturnIDW.IDOrder,
-    //   QtyObject: 1,
-    //   Schedule: null,
-    //   TipoColeta: 0,
-    // });
+    try {
+      const SRO = await idWorksApi.post('/correios/reversa', {
+        IDCarrier: 1864,
+        IDOrder: orderReturnIDW.IDOrder,
+        QtyObject: 1,
+        Schedule: null,
+        TipoColeta: 0,
+      });
 
-    // console.log(SRO.data);
+      console.log(SRO.data);
+    } catch (error) {
+      console.log(error);
+    }
 
     let group_slug;
 
