@@ -1,0 +1,66 @@
+[
+  {
+    "title":"Produto trocado",
+    "action": "exchange"
+  },
+  {
+    "title":"Embalagem violada",
+    "action": "exchange"
+  },
+  {
+    "title":"Derretido",
+    "action": "exchange"
+  },
+  {
+    "title":"Modelagem",
+    "action": "exchange"
+  },
+  {
+    "title":"Defeito",
+    "action": "exchange"
+  },
+  {
+    "title":"Quebrado",
+    "action": "exchange"
+  },
+  {
+    "title":"Item faltante",
+    "action": "exchange"
+  },
+  {
+    "title":"Validade",
+    "action": "exchange"
+  },
+  {
+    "title":"Arrependimento",
+    "action": "return"
+  },
+  {
+    "title":"Demora na entrega",
+    "action": "return"
+  },
+  {
+    "title":"Embalagem violada",
+    "action": "return"
+  },
+  {
+    "title":"Derretido",
+    "action": "return"
+  },
+  {
+    "title":"Defeito",
+    "action": "return"
+  },
+  {
+    "title":"Quebrado",
+    "action": "return"
+  },
+  {
+    "title":"Item faltante",
+    "action": "return"
+  },
+  {
+    "title":"Validade",
+    "action": "return"
+  }
+]

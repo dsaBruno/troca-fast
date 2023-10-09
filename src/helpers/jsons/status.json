@@ -1,0 +1,82 @@
+[
+  {
+    "title": "Em análise",
+    "group": "request"
+  },
+  {
+    "title": "Cancelado",
+    "group": "request"
+  },
+  {
+    "title": "Recusado",
+    "group": "request"
+  },
+  {
+    "title": "Aprovado parcial",
+    "group": "request"
+  },
+  {
+    "title": "Aprovado",
+    "group": "request"
+  },
+  {
+    "title": "Aguardando envio",
+    "group": "request"
+  },
+  {
+    "title": "Em trânsito",
+    "group": "request"
+  },
+  {
+    "title": "Aguardando conferência",
+    "group": "request"
+  },
+  {
+    "title": "Recebido completo",
+    "group": "request"
+  },
+  {
+    "title": "Recebido parcial",
+    "group": "request"
+  },
+  {
+    "title": "Aguardando pagamento",
+    "group": "request"
+  },
+  {
+    "title": "Cancelado",
+    "group": "protocol"
+  },
+  {
+    "title": "Aguardando retirada",
+    "group": "request"
+  },
+  {
+    "title": "Entregue",
+    "group": "request"
+  },
+  {
+    "title": "Resolvido",
+    "group": "request"
+  },
+  {
+    "title": "Solicitado",
+    "group": "protocol"
+  },
+  {
+    "title": "Pendente",
+    "group": "protocol"
+  },
+  {
+    "title": "Pago",
+    "group": "protocol"
+  },
+  {
+    "title": "Resolvido",
+    "group": "protocol"
+  },
+  {
+    "title": "Cancelado",
+    "group": "protocol"
+  }
+]
