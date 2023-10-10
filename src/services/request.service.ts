@@ -300,8 +300,6 @@ export class RequestService {
             await prisma.product.create({
               data,
             });
-
-            console.log('cadastrou produto');
           }),
         );
 

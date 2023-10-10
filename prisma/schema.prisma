@@ -190,6 +190,8 @@ model ProductNotOrdered {
   request_id String
   created_at DateTime @default(now())
   updated_at DateTime @default(now()) @updatedAt
+
+  @@map("product_not_ordered")
 }
 
 model LogsEmails {
