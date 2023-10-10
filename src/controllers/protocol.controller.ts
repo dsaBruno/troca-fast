@@ -43,7 +43,7 @@ export class ProtocolController {
     return;
   }
 
-  @Get()
+  @Post('/list')
   async index(@Req() req: Request, @Body() body: IndexProtocolDTO) {
     return await this.protocolService.index(req, body);
   }
