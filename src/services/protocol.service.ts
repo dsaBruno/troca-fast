@@ -36,7 +36,7 @@ export class ProtocolService {
       {
         where: body.where,
         orderBy: body.orderBy,
-        includes: {
+        include: {
           status: {
             select: {
               title: true,
