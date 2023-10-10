@@ -50,4 +50,51 @@ export class ProtocolService {
       },
     );
   }
+
+  async show(req, id): Promise<Protocol> {
+    const protocol = await prisma.protocol.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        status: {
+          select: {
+            title: true,
+          },
+        },
+        logsProtocol: {
+          select: {
+            status: {
+              select: {
+                title: true,
+              },
+            },
+            user: {
+              select: {
+                fullname: true,
+              },
+            },
+            created_at: true,
+          },
+        },
+        request: true,
+        product: {
+          include: {
+            reason: {
+              select: {
+                title: true,
+              },
+            },
+            productImage: {
+              select: {
+                url_image: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return protocol;
+  }
 }

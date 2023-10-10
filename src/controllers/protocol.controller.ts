@@ -43,6 +43,11 @@ export class ProtocolController {
     return;
   }
 
+  @Get('/:id')
+  async show(@Req() req: Request, @Param() { id }: GetProtocolDTO) {
+    return await this.protocolService.show(req, id);
+  }
+
   @Post('/list')
   async index(@Req() req: Request, @Body() body: IndexProtocolDTO) {
     return await this.protocolService.index(req, body);
