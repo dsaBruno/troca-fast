@@ -402,6 +402,13 @@ export class RequestService {
       {
         where: body.where,
         orderBy: body.orderBy,
+        include: {
+          status: {
+            select: {
+              title: true,
+            },
+          },
+        },
       },
       {
         page: body.page,
