@@ -18,6 +18,7 @@ import {
 import { CreateOrderReturnIDW } from 'src/helpers/create-return-order-idw.helper';
 import { idWorksApi } from 'src/helpers/apis/idw';
 import { updateSkuReturnOrder } from 'src/helpers/update-sku-return-order-idw.helper';
+import { MailerService } from '@nestjs-modules/mailer';
 
 const paginate: PaginateFunction = paginator({ perPage: 10 });
 
@@ -72,6 +73,8 @@ interface ProductBody {
 
 @Injectable()
 export class RequestService {
+  constructor(private readonly mailerService: MailerService) {}
+
   async register(req: any, body: CreateRequestDTO, files): Promise<Request> {
     const { idw, vtex } = await getOrderInfos(body.order_id);
 
@@ -315,6 +318,28 @@ export class RequestService {
         return;
       }),
     );
+
+    await this.mailerService.sendMail({
+      to: request.client_email,
+      from: 'trocafacil@lojasantoantonio.com.br',
+      subject: 'Solicitação Recebida',
+      template: 'order-received',
+      context: {
+        user: request.client_name.split(' ')[0],
+        sequencial: request.sequencial,
+      },
+    });
+
+    await prisma.logsEmails.create({
+      data: {
+        email: 'Solicitação Recebida',
+        request: {
+          connect: {
+            id: request.id,
+          },
+        },
+      },
+    });
 
     return request;
   }

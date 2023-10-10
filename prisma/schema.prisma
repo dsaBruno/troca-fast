@@ -55,8 +55,8 @@ model Status {
 }
 
 model Request {
-  id                    String        @id @default(uuid())
-  sequencial            Int           @unique @default(autoincrement())
+  id                    String              @id @default(uuid())
+  sequencial            Int                 @unique @default(autoincrement())
   shipping_method       String
   requester             String
   order_id              String
@@ -80,11 +80,14 @@ model Request {
   postage_code          String?
   voucher               Boolean
   status_id             String
-  created_at            DateTime      @default(now())
-  updated_at            DateTime      @default(now()) @updatedAt
-  status                Status        @relation(fields: [status_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  without_postage_code  Boolean             @default(false)
+  created_at            DateTime            @default(now())
+  updated_at            DateTime            @default(now()) @updatedAt
+  status                Status              @relation(fields: [status_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   protocol              Protocol[]
   LogsRequest           LogsRequest[]
+  ProductNotOrdered     ProductNotOrdered[]
+  LogsEmails            LogsEmails[]
 
   @@map("requests")
 }
@@ -152,7 +155,7 @@ model ProductImage {
 model LogsRequest {
   id         String   @id @default(uuid())
   user       User?    @relation(fields: [user_id], references: [id])
-  user_id    String
+  user_id    String?
   request    Request  @relation(fields: [request_id], references: [id])
   request_id String
   status     Status   @relation(fields: [status_id], references: [id])
@@ -166,7 +169,7 @@ model LogsRequest {
 model LogsProtocol {
   id          String   @id @default(uuid())
   user        User?    @relation(fields: [user_id], references: [id])
-  user_id     String
+  user_id     String?
   protocol    Protocol @relation(fields: [protocol_id], references: [id])
   protocol_id String
   status      Status   @relation(fields: [status_id], references: [id])
@@ -175,4 +178,27 @@ model LogsProtocol {
   updated_at  DateTime @default(now()) @updatedAt
 
   @@map("logs_protocol")
+}
+
+model ProductNotOrdered {
+  id         String   @id @default(uuid())
+  refId      String?
+  ean        String?
+  quantity   Int
+  merged     Boolean  @default(false)
+  request    Request  @relation(fields: [request_id], references: [id])
+  request_id String
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+}
+
+model LogsEmails {
+  id         String   @id @default(uuid())
+  email      String
+  request    Request  @relation(fields: [request_id], references: [id])
+  request_id String
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  @@map("logs_emails")
 }

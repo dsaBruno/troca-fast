@@ -11,6 +11,7 @@ import { FileUploadModule } from './file.module';
 import { ReasonModule } from './reason.module';
 import { StatusModule } from './status.module';
 import { DeleteImagesMiddleware } from 'src/middlewares/file-delete.middleware';
+import { ProtocolModule } from './protocol.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { DeleteImagesMiddleware } from 'src/middlewares/file-delete.middleware';
     RequestModule,
     ReasonModule,
     StatusModule,
+    ProtocolModule,
     MailerModule.forRoot({
       transport: {
         host: env.SMTP_HOST,

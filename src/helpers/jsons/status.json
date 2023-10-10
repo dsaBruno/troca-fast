@@ -36,7 +36,7 @@
     "group": "request"
   },
   {
-    "title": "Recebido parcial",
+    "title": "Recebido divergente",
     "group": "request"
   },
   {
@@ -44,9 +44,9 @@
     "group": "request"
   },
   {
-    "title": "Cancelado",
-    "group": "protocol"
-  },
+    "title": "Resolvida Parcialmente",
+    "group": "request"
+  },  
   {
     "title": "Aguardando retirada",
     "group": "request"
@@ -57,6 +57,10 @@
   },
   {
     "title": "Resolvido",
+    "group": "request"
+  },
+  {
+    "title": "Pendente Cliente",
     "group": "request"
   },
   {
@@ -77,6 +81,18 @@
   },
   {
     "title": "Recusado",
+    "group": "protocol"
+  },
+  {
+    "title": "Aguardando Aprovação",
+    "group": "protocol"
+  },
+  {
+    "title": "Aprovado",
+    "group": "protocol"
+  },
+  {
+    "title": "Cancelado",
     "group": "protocol"
   }
 ]

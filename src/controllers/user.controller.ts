@@ -10,6 +10,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { Request } from 'express';
+import { Public } from 'src/modules/decorators/auth.decorator';
 import { UserService } from 'src/services/user.service';
 import {
   CreateUserDTO,
@@ -21,6 +22,7 @@ import {
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  @Public()
   @Post()
   async register(@Req() req: Request, @Body() body: CreateUserDTO) {
     return await this.userService.register(req, body);

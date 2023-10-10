@@ -66,6 +66,7 @@ CREATE TABLE `requests` (
     `postage_code` VARCHAR(191) NULL,
     `voucher` BOOLEAN NOT NULL,
     `status_id` VARCHAR(191) NOT NULL,
+    `without_postage_code` BOOLEAN NOT NULL DEFAULT false,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
@@ -153,6 +154,31 @@ CREATE TABLE `logs_protocol` (
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+-- CreateTable
+CREATE TABLE `ProductNotOrdered` (
+    `id` VARCHAR(191) NOT NULL,
+    `refId` VARCHAR(191) NULL,
+    `ean` VARCHAR(191) NULL,
+    `quantity` INTEGER NOT NULL,
+    `merged` BOOLEAN NOT NULL DEFAULT false,
+    `request_id` VARCHAR(191) NOT NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `LogsEmails` (
+    `id` VARCHAR(191) NOT NULL,
+    `email` VARCHAR(191) NOT NULL,
+    `request_id` VARCHAR(191) NOT NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 -- AddForeignKey
 ALTER TABLE `requests` ADD CONSTRAINT `requests_status_id_fkey` FOREIGN KEY (`status_id`) REFERENCES `status`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -188,3 +214,9 @@ ALTER TABLE `logs_protocol` ADD CONSTRAINT `logs_protocol_protocol_id_fkey` FORE
 
 -- AddForeignKey
 ALTER TABLE `logs_protocol` ADD CONSTRAINT `logs_protocol_status_id_fkey` FOREIGN KEY (`status_id`) REFERENCES `status`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ProductNotOrdered` ADD CONSTRAINT `ProductNotOrdered_request_id_fkey` FOREIGN KEY (`request_id`) REFERENCES `requests`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `LogsEmails` ADD CONSTRAINT `LogsEmails_request_id_fkey` FOREIGN KEY (`request_id`) REFERENCES `requests`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
