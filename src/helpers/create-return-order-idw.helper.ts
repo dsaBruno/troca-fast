@@ -4,7 +4,6 @@ export const CreateOrderReturnIDW = async (
   IDOrder: string,
   products: { refId: string; quantity: number }[],
 ): Promise<any> => {
-  console.log(IDOrder, products);
   let orderIDWReturn = await idWorksApi.post(
     `orders/${IDOrder}/return?IDTypeOrderReturn=27`,
   );
@@ -67,8 +66,6 @@ export const CreateOrderReturnIDW = async (
         (product) => product.refId === item.IDSkuCompany,
       );
 
-      console.log(product);
-
       if (product !== undefined) {
         await idWorksApi.put(
           `/orders/${orderIDWReturn.data[0].IDOrder}/sku/${item.IDSkuMovement}`,
@@ -93,8 +90,6 @@ export const CreateOrderReturnIDW = async (
       }
     }),
   );
-
-  console.log('passou', orderIDWReturn.data[0].IDOrder);
 
   orderIDWReturn = await idWorksApi.post(
     `/orders/${orderIDWReturn.data[0].IDOrder}/start-handling`,

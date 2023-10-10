@@ -55,7 +55,7 @@ export class RequestController {
     return await this.requestService.show(req, id);
   }
 
-  @Get()
+  @Post('/list')
   async index(@Req() req: Request, @Body() body: IndexRequestDTO) {
     return await this.requestService.index(req, body);
   }

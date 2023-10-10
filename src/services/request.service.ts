@@ -545,19 +545,19 @@ export class RequestService {
 
     // IDCarrier = 1864 (PAC) || 1865 (SEDEX)
 
-    try {
-      const SRO = await idWorksApi.post('/correios/reversa', {
-        IDCarrier: 1864,
-        IDOrder: orderReturnIDW.IDOrder,
-        QtyObject: 1,
-        Schedule: null,
-        TipoColeta: 0,
-      });
+    // try {
+    //   const SRO = await idWorksApi.post('/correios/reversa', {
+    //     IDCarrier: 1864,
+    //     IDOrder: orderReturnIDW.IDOrder,
+    //     QtyObject: 1,
+    //     Schedule: null,
+    //     TipoColeta: 0,
+    //   });
 
-      console.log(SRO.data);
-    } catch (error) {
-      console.log(error);
-    }
+    //   console.log(SRO.data);
+    // } catch (error) {
+    //   console.log(error);
+    // }
 
     let group_slug;
 

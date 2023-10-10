@@ -11,7 +11,6 @@ async function bootstrap() {
     new ValidationPipe({
       exceptionFactory: (errors) => {
         const result = errors.map((error) => {
-          console.log(error.children.length);
           if (error.children.length > 0) {
             return error.children.map((error) => {
               return {
