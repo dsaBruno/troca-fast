@@ -16,7 +16,6 @@ import {
   paginator,
 } from 'src/prisma/paginator.interface';
 import { CreateOrderReturnIDW } from 'src/helpers/create-return-order-idw.helper';
-import { idWorksApi } from 'src/helpers/apis/idw';
 import { updateSkuReturnOrder } from 'src/helpers/update-sku-return-order-idw.helper';
 import { MailerService } from '@nestjs-modules/mailer';
 
@@ -68,7 +67,8 @@ interface ProductBody {
   description_request: string;
   action: string;
   images: string[];
-  reason_id: string;
+  reason_slug?: string;
+  reason_refused_product?: string;
 }
 
 @Injectable()
@@ -141,7 +141,7 @@ export class RequestService {
         category: itemVTX.additionalInfo.categories.pop().name,
         brand: itemVTX.additionalInfo.brandName,
         description_request: product.description_request,
-        reason_id: product.reason_id,
+        reason_slug: product.reason_slug,
         action: product.action,
         images: product.images,
       };
@@ -257,11 +257,12 @@ export class RequestService {
         await Promise.all(
           productsAction.map(async (product) => {
             const images = product.images;
-            const reason_id = product.reason_id;
+            const reason_slug = product.reason_slug;
+            const action = product.action;
 
             delete product.images;
             delete product.action;
-            delete product.reason_id;
+            delete product.reason_slug;
 
             const arrayImagesClient = images.map((img) => {
               const file = files.find((file) => file.originalname === img);
@@ -279,7 +280,10 @@ export class RequestService {
               },
               reason: {
                 connect: {
-                  id: reason_id,
+                  action_slug: {
+                    slug: reason_slug,
+                    action,
+                  },
                 },
               },
               productImage: {
@@ -343,30 +347,25 @@ export class RequestService {
   }
 
   async show(req: RequestExpress, id: string): Promise<Request> {
-    const request = await prisma.request.findUnique({
+    const request = await prisma.request.findFirst({
       where: {
         id,
       },
       include: {
-        LogsRequest: {
-          include: {
-            status: {
-              select: {
-                title: true,
-              },
-            },
-            user: {
-              select: {
-                fullname: true,
-              },
-            },
+        status: {
+          select: {
+            title: true,
+            slug: true,
+            updated_at: true,
           },
         },
-        status: true,
         protocol: {
           include: {
             logsProtocol: {
-              include: {
+              orderBy: {
+                created_at: 'asc',
+              },
+              select: {
                 status: {
                   select: {
                     title: true,
@@ -377,6 +376,7 @@ export class RequestService {
                     fullname: true,
                   },
                 },
+                created_at: true,
               },
             },
             status: true,
@@ -386,6 +386,24 @@ export class RequestService {
                 productImage: true,
               },
             },
+          },
+        },
+        LogsRequest: {
+          orderBy: {
+            created_at: 'asc',
+          },
+          select: {
+            status: {
+              select: {
+                title: true,
+              },
+            },
+            user: {
+              select: {
+                fullname: true,
+              },
+            },
+            created_at: true,
           },
         },
       },
@@ -422,9 +440,7 @@ export class RequestService {
     id: string,
     body: ApproveRequestDTO,
   ): Promise<Request> {
-    const validations = {
-      approvedComplete: true,
-    };
+    const requestStatus: string[] = [];
     const refIds: { refId: string; quantity: number }[] = [];
     let request = await prisma.request.findUnique({
       where: {
@@ -433,7 +449,15 @@ export class RequestService {
       include: {
         protocol: {
           include: {
-            product: true,
+            product: {
+              include: {
+                reason: {
+                  select: {
+                    slug: true,
+                  },
+                },
+              },
+            },
           },
         },
       },
@@ -451,12 +475,13 @@ export class RequestService {
             const productApprovalInformation: {
               product_id: string;
               quantity: number;
-              reason_id: string | null;
+              reason_slug: string | null;
               approved: boolean;
+              reason_refused_product: string | null;
             } = body.products.find((item) => item.product_id === product.id);
 
-            const reason_id =
-              productApprovalInformation.reason_id || product.reason_id;
+            const reason_slug =
+              productApprovalInformation.reason_slug || product.reason.slug;
 
             await prisma.product.update({
               where: {
@@ -467,7 +492,10 @@ export class RequestService {
                 quantity: productApprovalInformation.quantity,
                 reason: {
                   connect: {
-                    id: reason_id,
+                    action_slug: {
+                      slug: reason_slug,
+                      action: protocol.action,
+                    },
                   },
                 },
               },
@@ -487,20 +515,24 @@ export class RequestService {
                 refId: product.refId,
                 quantity: productApprovalInformation.quantity,
               });
-            } else {
-              validations.approvedComplete = false;
             }
+
             return;
           }),
         );
 
-        let group_slug;
+        let group_slug = {
+          slug: 'solicitado',
+          group: 'protocol',
+        };
 
         if (proportionalAmounts.value === 0) {
           group_slug = {
             slug: 'recusado',
             group: 'protocol',
           };
+
+          requestStatus.push('refused');
 
           await prisma.logsProtocol.create({
             data: {
@@ -522,10 +554,33 @@ export class RequestService {
             },
           });
         } else {
-          group_slug = {
-            slug: 'solicitado',
-            group: 'protocol',
-          };
+          if (body.without_postage_code) {
+            group_slug = {
+              slug: 'pendente',
+              group: 'protocol',
+            };
+
+            await prisma.logsProtocol.create({
+              data: {
+                status: {
+                  connect: {
+                    group_slug,
+                  },
+                },
+                protocol: {
+                  connect: {
+                    id: protocol.id,
+                  },
+                },
+                user: {
+                  connect: {
+                    id: req.user.sub,
+                  },
+                },
+              },
+            });
+          }
+          requestStatus.push('approved');
         }
 
         await prisma.protocol.update({
@@ -545,10 +600,10 @@ export class RequestService {
       }),
     );
 
-    const orderReturnIDW = await CreateOrderReturnIDW(
-      request.order_id_idw,
-      refIds,
-    );
+    // const orderReturnIDW = await CreateOrderReturnIDW(
+    //   request.order_id_idw,
+    //   refIds,
+    // );
 
     // IDCarrier = 1864 (PAC) || 1865 (SEDEX)
 
@@ -566,77 +621,63 @@ export class RequestService {
     //   console.log(error);
     // }
 
-    let group_slug;
+    const slugs: string[] = [];
 
-    if (validations.approvedComplete) {
-      group_slug = {
-        slug: 'aprovado',
-        group: 'request',
-      };
+    if (requestStatus.length === 2) {
+      requestStatus[0] !== requestStatus[1]
+        ? slugs.push('aprovado-parcial')
+        : slugs.push(requestStatus[0] === 'approved' ? 'aprovado' : 'recusado');
     } else {
-      group_slug = {
-        slug: 'aprovado',
-        group: 'request',
-      };
+      slugs.push(requestStatus[0] === 'approved' ? 'aprovado' : 'recusado');
     }
-
-    await prisma.logsRequest.create({
-      data: {
-        status: {
-          connect: {
-            group_slug,
-          },
-        },
-        request: {
-          connect: {
-            id: request.id,
-          },
-        },
-        user: {
-          connect: {
-            id: req.user.sub,
-          },
-        },
-      },
-    });
 
     if (!body.without_postage_code) {
-      group_slug = {
-        slug: 'aguardando-envio',
-        group: 'request',
-      };
-
-      await prisma.logsRequest.create({
-        data: {
-          status: {
-            connect: {
-              group_slug,
-            },
-          },
-          request: {
-            connect: {
-              id: request.id,
-            },
-          },
-          user: {
-            connect: {
-              id: req.user.sub,
-            },
-          },
-        },
-      });
+      slugs.push('com-devolucao', 'aguardando-envio');
+    } else {
+      slugs.push('sem-devolucao', 'pendente');
     }
+
+    await Promise.all(
+      slugs.map(async (status) => {
+        await prisma.logsRequest.create({
+          data: {
+            status: {
+              connect: {
+                group_slug: {
+                  slug: status,
+                  group: 'request',
+                },
+              },
+            },
+            request: {
+              connect: {
+                id: request.id,
+              },
+            },
+            user: {
+              connect: {
+                id: req.user.sub,
+              },
+            },
+          },
+        });
+      }),
+    );
 
     await prisma.request.update({
       where: {
         id,
       },
       data: {
-        nfd: orderReturnIDW.NfeNumber,
-        order_id_return: orderReturnIDW.IDOrder,
+        without_postage_code: body.without_postage_code,
+        // nfd: orderReturnIDW.NfeNumber,
+        // order_id_return: orderReturnIDW.IDOrder,
         status: {
           connect: {
-            group_slug,
+            group_slug: {
+              slug: slugs.pop(),
+              group: 'request',
+            },
           },
         },
       },

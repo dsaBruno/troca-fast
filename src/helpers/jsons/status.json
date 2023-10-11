@@ -40,7 +40,7 @@
     "group": "request"
   },
   {
-    "title": "Aguardando pagamento",
+    "title": "Pendente Protocolo(s)",
     "group": "request"
   },
   {
@@ -94,5 +94,13 @@
   {
     "title": "Cancelado",
     "group": "protocol"
+  },
+  {
+    "title": "Sem Devolução",
+    "group": "request"
+  },
+  {
+    "title": "Com Devolução",
+    "group": "request"
   }
 ]

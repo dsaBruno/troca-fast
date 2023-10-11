@@ -22,7 +22,7 @@ class ProductsRequestDTO {
   quantity: string;
 
   @IsString()
-  reason_id: string;
+  reason_slug: string;
 
   @IsString()
   description_request: string;
@@ -45,7 +45,11 @@ class ProductApproved {
 
   @IsString()
   @IsOptional()
-  reason_id: string;
+  reason_slug: string;
+
+  @IsString()
+  @IsOptional()
+  reason_refused_product: string;
 
   @IsBoolean()
   approved: boolean;

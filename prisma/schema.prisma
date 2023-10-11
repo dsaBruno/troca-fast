@@ -119,24 +119,25 @@ model Protocol {
 }
 
 model Product {
-  id                  String         @id @default(uuid())
-  name                String
-  value               Float
-  quantity            Int
-  refId               String
-  image               String
-  ean                 String
-  category            String
-  brand               String
-  description_request String         @db.LongText
-  approved            Boolean?
-  reason_id           String
-  protocol_id         String
-  created_at          DateTime       @default(now())
-  updated_at          DateTime       @default(now()) @updatedAt
-  reason              Reason         @relation(fields: [reason_id], references: [id])
-  protocol            Protocol       @relation(fields: [protocol_id], references: [id])
-  productImage        ProductImage[]
+  id                     String         @id @default(uuid())
+  name                   String
+  value                  Float
+  quantity               Int
+  refId                  String
+  image                  String
+  ean                    String
+  category               String
+  brand                  String
+  description_request    String         @db.LongText
+  approved               Boolean?
+  reason_refused_product String?        @db.LongText
+  reason_id              String
+  protocol_id            String
+  created_at             DateTime       @default(now())
+  updated_at             DateTime       @default(now()) @updatedAt
+  reason                 Reason         @relation(fields: [reason_id], references: [id])
+  protocol               Protocol       @relation(fields: [protocol_id], references: [id])
+  productImage           ProductImage[]
 
   @@map("products")
 }
