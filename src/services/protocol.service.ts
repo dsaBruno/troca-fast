@@ -42,6 +42,7 @@ export class ProtocolService {
               title: true,
             },
           },
+          request: true,
         },
       },
       {
