@@ -3,9 +3,11 @@ import { AppModule } from './modules/app.module';
 import { BadRequestException, ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import * as path from 'path';
+import { IoAdapter } from '@nestjs/platform-socket.io';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  // app.useWebSocketAdapter(new IoAdapter(app));
   app.enableCors();
   app.useGlobalPipes(
     new ValidationPipe({
@@ -36,6 +38,7 @@ async function bootstrap() {
   );
   app.setGlobalPrefix('troca/api/');
   app.useStaticAssets(path.join(__dirname, './tmp/uploads'));
+  app.useWebSocketAdapter(redisIoAdapter);
   await app.listen(3333);
 }
 bootstrap();

@@ -12,6 +12,24 @@ const paginate: PaginateFunction = paginator({ perPage: 10 });
 @Injectable()
 export class ProtocolService {
   async approve(req: any, id: string): Promise<Protocol> {
+    await await prisma.logsProtocol.create({
+      data: {
+        protocol: {
+          connect: {
+            id,
+          },
+        },
+        status: {
+          connect: {
+            group_slug: {
+              slug: 'aprovado',
+              group: 'protocol',
+            },
+          },
+        },
+      },
+    });
+
     const protocol = await prisma.protocol.update({
       where: {
         id,
@@ -27,6 +45,7 @@ export class ProtocolService {
         },
       },
     });
+
     return protocol;
   }
 
@@ -97,5 +116,9 @@ export class ProtocolService {
     });
 
     return protocol;
+  }
+
+  async pay(req, id): Promise<Protocol> {
+    return null;
   }
 }

@@ -18,6 +18,7 @@ import {
 import { CreateOrderReturnIDW } from 'src/helpers/create-return-order-idw.helper';
 import { updateSkuReturnOrder } from 'src/helpers/update-sku-return-order-idw.helper';
 import { MailerService } from '@nestjs-modules/mailer';
+import { RequestGateway } from 'src/gateways/request.gateway';
 
 const paginate: PaginateFunction = paginator({ perPage: 10 });
 
@@ -73,7 +74,9 @@ interface ProductBody {
 
 @Injectable()
 export class RequestService {
-  constructor(private readonly mailerService: MailerService) {}
+  constructor(
+    private readonly mailerService: MailerService, // private readonly requestGateway: RequestGateway,
+  ) {}
 
   async register(req: any, body: CreateRequestDTO, files): Promise<Request> {
     const { idw, vtex } = await getOrderInfos(body.order_id);
@@ -406,6 +409,12 @@ export class RequestService {
             created_at: true,
           },
         },
+        LogsEmails: {
+          select: {
+            email: true,
+            created_at: true,
+          },
+        },
       },
     });
     return request;
@@ -415,6 +424,12 @@ export class RequestService {
     req: RequestExpress,
     body: IndexRequestDTO,
   ): Promise<PaginatedResult<Request>> {
+    const eventBody = {
+      message: 'Motivo criado com sucesso',
+    };
+
+    // this.requestGateway.createRequest(eventBody);
+
     return await paginate(
       prisma.request,
       {
