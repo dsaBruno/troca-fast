@@ -108,7 +108,11 @@
     "group": "request"
   },
   {
-    "title": "Alterado",
+    "title": "Alterado - Produto Removido",
+    "group": "protocol"
+  },
+  {
+    "title": "Alterado - Produto Adicionado",
     "group": "protocol"
   }
 ]

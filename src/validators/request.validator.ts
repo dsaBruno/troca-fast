@@ -14,7 +14,7 @@ import { Type } from 'class-transformer';
 import { Prisma } from '@prisma/client';
 import { IsRequest } from './customs/find-request-by-id';
 
-class ProductsRequestDTO {
+export class ProductsRequestDTO {
   @IsString()
   refId: string;
 

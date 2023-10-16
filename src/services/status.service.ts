@@ -70,6 +70,11 @@ export class StatusService {
     );
   }
 
+  async listAll(req): Promise<Status[]> {
+    const status = await prisma.status.findMany();
+    return status;
+  }
+
   async show(req: Request, id: string): Promise<Status> {
     const status = await prisma.status.findUnique({
       where: {

@@ -20,6 +20,7 @@ import {
   CreateRequestDTO,
   GetRequestDTO,
   IndexRequestDTO,
+  ProductsRequestDTO,
   ReceivingRequestDTO,
 } from 'src/validators/request.validator';
 import { GetProductRequestDTO } from 'src/validators/product.validator';
@@ -105,8 +106,9 @@ export class RequestController {
   async addProduct(
     @Req() req: Request,
     @Param() { id }: GetRequestDTO,
-    @Body() body: IndexRequestDTO,
+    @Body() body: ProductsRequestDTO,
+    @UploadedFiles() files,
   ) {
-    return null;
+    return this.requestService.addProduct(req, id, body, files);
   }
 }

@@ -8,6 +8,7 @@ import {
   CreateRequestDTO,
   GetRequestDTO,
   IndexRequestDTO,
+  ProductsRequestDTO,
   ReceivingRequestDTO,
 } from 'src/validators/request.validator';
 import { env } from 'src/env';
@@ -977,7 +978,7 @@ export class RequestService {
         status: {
           connect: {
             group_slug: {
-              slug: 'alterado',
+              slug: 'alterado-produto-removido',
               group: 'protocol',
             },
           },
@@ -1007,7 +1008,118 @@ export class RequestService {
     return product;
   }
 
-  async addProduct(req: any, id: string, body: ReceivingRequestDTO[], files) {
-    return null;
+  async addProduct(
+    req: any,
+    id: string,
+    body: ProductsRequestDTO,
+    files,
+  ): Promise<any> {
+    const protocol = await prisma.protocol.findFirst({
+      where: {
+        request_id: id,
+        action: body.action,
+      },
+      include: {
+        product: true,
+        request: true,
+      },
+    });
+
+    const orderInfos = await getOrderInfos(protocol.request.order_id);
+
+    const freightOrder = protocol.request.order_freight_value;
+    const totalOrder = protocol.request.order_value;
+
+    const productIDW = orderInfos.idw.Items.find(
+      (product) => product.IDSkuCompany == body.refId,
+    );
+
+    const productVTX = orderInfos.vtex.items.find(
+      (product) => product.refId == body.refId,
+    );
+
+    const totalProtocol =
+      productIDW.PriceSelling * parseInt(body.quantity) + protocol.total;
+
+    const newFreightValue = (totalProtocol * freightOrder) / totalOrder;
+
+    await prisma.protocol.update({
+      where: {
+        id: protocol.id,
+      },
+      data: {
+        total: totalProtocol,
+        freight_value: newFreightValue,
+      },
+    });
+
+    const product = await prisma.product.create({
+      data: {
+        brand: productVTX.additionalInfo.brandName,
+        category: productVTX.additionalInfo.categories.pop().name,
+        description_request: body.description_request,
+        ean: productIDW.BarCode,
+        image: productVTX.imageUrl,
+        name: productVTX.name,
+        quantity: parseInt(body.quantity),
+        refId: body.refId,
+        value: productIDW.PriceSelling,
+        protocol: {
+          connect: {
+            id: protocol.id,
+          },
+        },
+        reason: {
+          connect: {
+            action_slug: {
+              slug: body.reason_slug,
+              action: body.action,
+            },
+          },
+        },
+      },
+    });
+
+    files.map(async (file) => {
+      await prisma.productImage.create({
+        data: {
+          url_image: `${env.URL_IMAGE}${file.filename}`,
+          product: {
+            connect: {
+              id: product.id,
+            },
+          },
+        },
+      });
+    });
+
+    await prisma.logsProtocol.create({
+      data: {
+        user: {
+          connect: {
+            id: req.user.sub || null,
+          },
+        },
+        protocol: {
+          connect: {
+            id: protocol.id,
+          },
+        },
+        status: {
+          connect: {
+            group_slug: {
+              slug: 'alterado-produto-adicionado',
+              group: 'protocol',
+            },
+          },
+        },
+      },
+    });
+
+    return await prisma.protocol.findUnique({
+      where: {
+        id: protocol.id,
+      },
+    });
   }
 }

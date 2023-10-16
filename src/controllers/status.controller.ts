@@ -30,6 +30,11 @@ export class StatusController {
   }
 
   @Get()
+  async listAll(@Req() req) {
+    return await this.statusService.listAll(req);
+  }
+
+  @Post('/list')
   async index(@Req() req, @Body() body) {
     return await this.statusService.index(req, body);
   }

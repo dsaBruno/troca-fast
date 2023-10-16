@@ -39,6 +39,11 @@ export class ReasonController {
   }
 
   @Get()
+  async listAll(@Req() req) {
+    return await this.reasonService.listAll(req);
+  }
+
+  @Post('/list')
   async index(@Req() req, @Body() body: IndexReasonDTO) {
     return await this.reasonService.index(req, body);
   }

@@ -70,6 +70,11 @@ export class ReasonService {
     );
   }
 
+  async listAll(res): Promise<Reason[]> {
+    const reasons = await prisma.reason.findMany();
+    return reasons;
+  }
+
   async show(req: Request, id: string): Promise<Reason> {
     const reason = await prisma.reason.findUnique({
       where: {
