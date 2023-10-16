@@ -102,5 +102,13 @@
   {
     "title": "Com Devolução",
     "group": "request"
+  },
+  {
+    "title": "Alterado",
+    "group": "request"
+  },
+  {
+    "title": "Alterado",
+    "group": "protocol"
   }
 ]

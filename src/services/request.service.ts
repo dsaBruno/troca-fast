@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { Request as RequestExpress } from 'express';
-import { Prisma, Request } from '@prisma/client';
+import { Prisma, Product, Request } from '@prisma/client';
 import { getOrderInfos } from 'src/helpers/get-order.helper';
 import { prisma } from 'src/prisma/prisma.service';
 import {
   ApproveRequestDTO,
   CreateRequestDTO,
+  GetRequestDTO,
   IndexRequestDTO,
   ReceivingRequestDTO,
 } from 'src/validators/request.validator';
@@ -19,6 +20,12 @@ import { CreateOrderReturnIDW } from 'src/helpers/create-return-order-idw.helper
 import { updateSkuReturnOrder } from 'src/helpers/update-sku-return-order-idw.helper';
 import { MailerService } from '@nestjs-modules/mailer';
 import { RequestGateway } from 'src/gateways/request.gateway';
+import { GetProductRequestDTO } from 'src/validators/product.validator';
+
+import * as fs from 'fs';
+import * as path from 'path';
+
+import { ProductNotFound } from 'src/errors/product-not-found-error';
 
 const paginate: PaginateFunction = paginator({ perPage: 10 });
 
@@ -80,24 +87,6 @@ export class RequestService {
 
   async register(req: any, body: CreateRequestDTO, files): Promise<Request> {
     const { idw, vtex } = await getOrderInfos(body.order_id);
-
-    const statusRequest = await prisma.status.findUnique({
-      where: {
-        group_slug: {
-          slug: 'em-analise',
-          group: 'request',
-        },
-      },
-    });
-
-    const statusProtocol = await prisma.status.findUnique({
-      where: {
-        group_slug: {
-          slug: 'solicitado',
-          group: 'protocol',
-        },
-      },
-    });
 
     const gift = idw.Payments.find(
       (payment) => payment.PaymentDescription === 'VALE (VTEX)',
@@ -183,7 +172,10 @@ export class RequestService {
         ...requestBody,
         status: {
           connect: {
-            id: statusRequest.id,
+            group_slug: {
+              slug: 'em-analise',
+              group: 'request',
+            },
           },
         },
       },
@@ -221,7 +213,10 @@ export class RequestService {
           },
           status: {
             connect: {
-              id: statusProtocol.id,
+              group_slug: {
+                slug: 'solicitado',
+                group: 'protocol',
+              },
             },
           },
         };
@@ -871,5 +866,148 @@ export class RequestService {
       },
     });
     return;
+  }
+
+  async deleteProduct(
+    req: any,
+    id: string,
+    product_id: string,
+  ): Promise<Product> {
+    const product = await prisma.product.findFirst({
+      where: {
+        id: product_id,
+        protocol: {
+          request_id: id,
+        },
+      },
+      include: {
+        productImage: true,
+        protocol: {
+          include: {
+            product: true,
+            request: {
+              include: {
+                status: {
+                  select: {
+                    slug: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!product) {
+      throw new ProductNotFound();
+    }
+
+    const newTotalProtocol =
+      product.protocol.total - product.value * product.quantity;
+    const newFreightProtocol =
+      (newTotalProtocol * product.protocol.freight_value) /
+      product.protocol.total;
+
+    if (newTotalProtocol === 0) {
+      await prisma.protocol.update({
+        where: {
+          id: product.protocol.id,
+        },
+        data: {
+          status: {
+            connect: {
+              group_slug: {
+                slug: 'cancelado',
+                group: 'protocol',
+              },
+            },
+          },
+        },
+      });
+
+      await prisma.logsProtocol.create({
+        data: {
+          user: {
+            connect: {
+              id: req.user.sub || null,
+            },
+          },
+          protocol: {
+            connect: {
+              id: product.protocol.id,
+            },
+          },
+          status: {
+            connect: {
+              group_slug: {
+                slug: 'cancelado',
+                group: 'protocol',
+              },
+            },
+          },
+        },
+      });
+
+      return product;
+    }
+
+    await prisma.protocol.update({
+      where: {
+        id: product.protocol.id,
+      },
+      data: {
+        total: newTotalProtocol,
+        freight_value: newFreightProtocol,
+      },
+    });
+
+    await prisma.logsProtocol.create({
+      data: {
+        user: {
+          connect: {
+            id: req.user.sub || null,
+          },
+        },
+        protocol: {
+          connect: {
+            id: product.protocol.id,
+          },
+        },
+        status: {
+          connect: {
+            group_slug: {
+              slug: 'alterado',
+              group: 'protocol',
+            },
+          },
+        },
+      },
+    });
+
+    await Promise.all(
+      product.productImage.map(async (image) => {
+        const filename = image.url_image.replace(env.URL_IMAGE, '');
+        fs.unlinkSync(path.join(process.cwd(), '/tmp/uploads/' + filename));
+
+        await prisma.productImage.delete({
+          where: {
+            id: image.id,
+          },
+        });
+      }),
+    );
+
+    await prisma.product.delete({
+      where: {
+        id: product.id,
+      },
+    });
+
+    return product;
+  }
+
+  async addProduct(req: any, id: string, body: ReceivingRequestDTO[], files) {
+    return null;
   }
 }

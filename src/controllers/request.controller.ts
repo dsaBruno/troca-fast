@@ -22,6 +22,7 @@ import {
   IndexRequestDTO,
   ReceivingRequestDTO,
 } from 'src/validators/request.validator';
+import { GetProductRequestDTO } from 'src/validators/product.validator';
 
 @Controller('request')
 export class RequestController {
@@ -76,5 +77,37 @@ export class RequestController {
     @Body() body: ReceivingRequestDTO[],
   ) {
     return await this.requestService.receiving(req, id, body);
+  }
+
+  @Public()
+  @Put('/:id/delete/product/:product_id')
+  async deleteProduct(
+    @Req() req: Request,
+    @Param() { id }: GetRequestDTO,
+    @Param() { product_id }: GetProductRequestDTO,
+  ) {
+    return await this.requestService.deleteProduct(req, id, product_id);
+  }
+
+  @Put('/:id/add/product')
+  @UseInterceptors(
+    FilesInterceptor('files', 99, {
+      storage: diskStorage({
+        destination: './tmp/uploads/',
+        filename: (req, file, cb) => {
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const fileExtName = extname(file.originalname);
+          cb(null, `${uniqueSuffix}${fileExtName}`);
+        },
+      }),
+    }),
+  )
+  async addProduct(
+    @Req() req: Request,
+    @Param() { id }: GetRequestDTO,
+    @Body() body: IndexRequestDTO,
+  ) {
+    return null;
   }
 }
