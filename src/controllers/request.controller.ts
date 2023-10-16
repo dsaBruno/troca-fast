@@ -79,7 +79,6 @@ export class RequestController {
     return await this.requestService.receiving(req, id, body);
   }
 
-  @Public()
   @Put('/:id/delete/product/:product_id')
   async deleteProduct(
     @Req() req: Request,
